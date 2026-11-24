@@ -66,6 +66,10 @@
         "ca73540fed71dc5fb6f51d3d5c2366ebb8c2532cfb39ab4065c8831a3c864b58" "dep-v3.tar.gz")
       (spec-publish "jonruttan/x-app" "latest/download" "app" "v1"
         "f2ecf4c4aad0df01cca68ee276cf39a7d5062a9543f2e100cc3bdf55b8cc479c" "app-v1.tar.gz")
+      (spec-publish "jonruttan/x-dep" "latest/download" "dep" "v2"
+        "5d01832c32255a61ec03d7686714eefe3a6939c269e27f22c654f9d57bd68c89" "dep-v2.tar.gz")
+      (spec-publish "jonruttan/x-use" "latest/download" "use" "v1"
+        "d9891f171b76cc3bd1b935357e51dd98da2e28fa6be254d334007d3995796a85" "use-v1.tar.gz")
       (spec-index! "(bundle \"app\" \"jonruttan/x-app\")\n(bundle \"dep\" \"alice/x-dep\")\n")
       (Sys setenv "X_BUNDLE_HOST" (Str8 append "file://" spec-root "/host"))
       (Str8 append spec-root "/bundles"))))

@@ -39,6 +39,20 @@ bundle/install, against releases laid out under a directory.
 ---
     ((("dep" . "v3")) (("app" . "v1") ("dep" . "v2")))
 
+### a requirement naming no repository: the index's, else jonruttan/x-NAME
+
+```bundle
+(def dir (spec-host!))
+(install! "jonruttan/x-use" dir)
+(def listed (installed dir))
+(def dir (spec-host!))
+(spec-index! "(bundle \"zzz\" \"o/zzz\")\n")
+(install! "jonruttan/x-use" dir)
+(write (list listed (installed dir)))
+```
+---
+    ((("dep" . "v3") ("use" . "v1")) (("dep" . "v2") ("use" . "v1")))
+
 ### by reference: the latest release, with no index row read
 
 ```bundle

@@ -108,8 +108,18 @@
   (fn (_ path)
     (guard (_ ()) (Str8 trim (File read-all (%join path "version"))))))
 
+; The reference a requirement is fetched from: the repository its row names,
+; else the one the index lists under its name, else jonruttan/x-NAME. The
+; index is read only for a row that names no repository.
+(def %requirement-ref
+  (fn (_ name repo dir)
+    (if (null? repo)
+      (let ((ref (index-ref name (%index dir))))
+        (if (null? ref) (Str8 append "jonruttan/x-" name) ref))
+      repo)))
+
 ; Every bundle in reqs, and what each requires in turn, into dir. A row's
-; repository is used as written, jonruttan/x-NAME when it names none; its
+; repository is the one %requirement-ref answers; its
 ; version is that release, the latest when it names none. One installed at
 ; the version asked for (at any, when none is asked) is left alone; at
 ; another, it is replaced. seen holds the names this install has handled,
@@ -130,7 +140,7 @@
                   (if (null? have) ()
                     (display "bundle: " name " " have " installed, " version " required: replacing it\n"))
                   (let ((path (Pin install
-                                (ref-pin-url (if (null? repo) (Str8 append "jonruttan/x-" name) repo) version)
+                                (ref-pin-url (%requirement-ref name repo dir) version)
                                 dir)))
                     (do
                       (if (str=? (Path basename path) name) ()
