@@ -10,7 +10,8 @@ index of official bundles.
 ## Commands
 
     install WHAT  Install a bundle and every bundle it requires. WHAT is a
-                  name in the index, OWNER/REPO, or the URL of a bundle.pin.xon
+                  name in the index, OWNER/REPO, the URL of a bundle.pin.xon,
+                  or a directory holding a bundle, such as .
     list          List the installed bundles and their versions
     remove NAME   Remove an installed bundle
 
@@ -22,6 +23,7 @@ index of official bundles.
 x -l bundle -- install gfx                  # a name the index lists
 x -l bundle -- install alice/x-foo          # a repository on github.com
 x -l bundle -- install https://example.org/foo/bundle.pin.xon
+x -l bundle -- install .                    # the bundle in this directory
 x -l bundle -- list
 x -l bundle -- remove gfx
 ```
@@ -37,6 +39,11 @@ unpacked, and it replaces an earlier install only once it is whole.
 - **`OWNER/REPO`** is a repository on github.com, with or without an index
   row. Its latest release's pin is read.
 - **A URL** is the pin itself, on any host.
+- **A directory**, what starts with `.` or `/`, holds a bundle: its
+  `bundle.xon` and `lib/` are copied under the name the `bundle.xon`
+  declares, with no version stamp, since a directory is no release. `list`
+  shows such a bundle with no version, and it meets only a requirement that
+  names none.
 
 Each `(requires-bundle "NAME" "VERSION" "OWNER/REPO")` row of the installed
 bundle's `bundle.xon` is then installed the same way: that release of that

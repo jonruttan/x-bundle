@@ -155,14 +155,77 @@
       (do (self (Path dirname dir))
           (File mkdir dir)))))
 
-; Install what -- a name the index lists, a reference, or the URL of a
-; bundle.pin.xon -- under dir, then every bundle it requires. Answers the
-; directory it was installed to.
+; path and everything under it.
+(def %remove-tree!
+  (fn (self path)
+    (if (eq? (File ltype path) (lit dir))
+      (do (List for-each (fn (_ e) (self (%join path e))) (File list-dir path))
+          (File rmdir path))
+      (File unlink path))))
+
+; from's files and directories copied to to, which is made. Anything that is
+; neither, a link among them, is left out.
+(def %copy-tree!
+  (fn (self from to)
+    (do
+      (File mkdir to)
+      (List for-each
+        (fn (_ e)
+          (let ((kind (File ltype (%join from e))))
+            (match
+              ((eq? kind (lit dir)) (self (%join from e) (%join to e)))
+              ((eq? kind (lit file)) (File copy (%join from e) (%join to e)))
+              (#t ()))))
+        (File list-dir from)))))
+
+; A directory is what starts with "." or "/": a name has neither, and a
+; reference starts with its owner.
+(def %directory?
+  (fn (_ what) (if (Str8 starts? "." what) #t (Str8 starts? "/" what))))
+
+; The name the (name "NAME") row among forms declares, or nil.
+(def %declared-name
+  (fn (_ forms)
+    (let ((row (List find (fn (_ f) (if (pair? f) (eq? (first f) (lit name)) #f)) forms)))
+      (if (null? row) ()
+        (if (pair? (rest row)) (if (str? (first (rest row))) (first (rest row)) ()) ())))))
+
+; The bundle in the directory from, installed to dir/NAME under the name its
+; bundle.xon declares: the declaration and lib/, what a release's tarball
+; carries, with no version stamp, since a directory is no release. The copy
+; is whole before it replaces an earlier install. Answers dir/NAME.
+(def %install-directory!
+  (fn (_ from dir)
+    (let ((name (%declared-name (%manifest from))))
+      (match
+        ((null? name) (%bad (Str8 append "no bundle.xon naming a bundle in " from)))
+        ((if (str=? name "") #t (if (Str8 includes? "/" name) #t (Str8 starts? "." name)))
+          (%bad (Str8 append "not a bundle's name: " name)))
+        (#t
+          (let ((path (%join dir name))
+                (tmp (%join dir (Str8 append "." name "." (Str8 str (Sys getpid)) ".tmp"))))
+            (do
+              (if (File exists? tmp) (%remove-tree! tmp) ())
+              (File mkdir tmp)
+              (File copy (%join from "bundle.xon") (%join tmp "bundle.xon"))
+              (if (eq? (File ltype (%join from "lib")) (lit dir))
+                (%copy-tree! (%join from "lib") (%join tmp "lib"))
+                ())
+              (if (File exists? path) (%remove-tree! path) ())
+              (File rename tmp path)
+              (display "bundle: installed " name " from " from " to " path "\n")
+              path)))))))
+
+; Install what -- a name the index lists, a reference, the URL of a
+; bundle.pin.xon, or a directory holding a bundle -- under dir, then every
+; bundle it requires. Answers the directory it was installed to.
 (def install!
   (fn (_ what dir)
     (do
       (%mkdirs! dir)
-      (let ((path (Pin install (%pin-url what dir) dir)))
+      (let ((path (if (%directory? what)
+                    (%install-directory! what dir)
+                    (Pin install (%pin-url what dir) dir))))
         (do (%install-requires! (%requires (%manifest path)) dir (list (Path basename path)))
             path)))))
 
@@ -176,14 +239,6 @@
           (if (if (Str8 starts? "." e) #t (null? (%manifest (%join dir e)))) ()
             (list (pair e (%version (%join dir e))))))
         (guard (_ ()) (File list-dir dir))))))
-
-; path and everything under it.
-(def %remove-tree!
-  (fn (self path)
-    (if (eq? (File ltype path) (lit dir))
-      (do (List for-each (fn (_ e) (self (%join path e))) (File list-dir path))
-          (File rmdir path))
-      (File unlink path))))
 
 ; Remove the bundle installed as name under dir. Answers the directory
 ; removed.

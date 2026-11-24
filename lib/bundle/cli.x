@@ -21,7 +21,8 @@
     "Install, list and remove x bundles."
     (list (Opts text "Commands:")
           (Opts text "  install WHAT  Install a bundle and every bundle it requires. WHAT is a")
-          (Opts text "                name in the index, OWNER/REPO, or the URL of a bundle.pin.xon")
+          (Opts text "                name in the index, OWNER/REPO, the URL of a bundle.pin.xon,")
+          (Opts text "                or a directory holding a bundle, such as .")
           (Opts text "  list          List the installed bundles and their versions")
           (Opts text "  remove NAME   Remove an installed bundle")
           (Opts text "")
@@ -66,7 +67,7 @@
       ((str=? command "install")
         (if (= (List length operands) 1)
           (%run (fn (_) (install! (first operands) (dir))))
-          (%refuse "install takes one bundle: a name, OWNER/REPO, or a bundle.pin.xon URL")))
+          (%refuse "install takes one bundle: a name, OWNER/REPO, a bundle.pin.xon URL, or a directory")))
       ((str=? command "list")
         (if (null? operands) (%run (fn (_) (%list (dir)))) (%refuse "list takes no operands")))
       ((str=? command "remove")
