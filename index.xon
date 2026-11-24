@@ -1,0 +1,9 @@
+; index.xon -- the official x bundles: a bare name, and where it lives.
+;
+; One (bundle "NAME" "REFERENCE") row a bundle, sorted by name. A reference
+; is OWNER/REPO on github.com, or DOMAIN/OWNER/REPO. `x bundle install NAME`
+; installs the latest release of the repository NAME's row names; a bundle
+; needs no row to be installed by its reference or by its pin's URL.
+
+(bundle "gfx" "jonruttan/x-lib-gfx")
+(bundle "r5rs" "jonruttan/x-r5rs")

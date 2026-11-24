@@ -1,0 +1,11 @@
+; bundle.xon -- what this bundle is.
+
+(name "bundle")
+
+; Helium, plus exactly the libraries this bundle imports: files, the
+; platform's pin tool and, on a first fetch, Http.
+(dialect he)
+
+(requires-release "v0.62.0")
+
+(entry run)
