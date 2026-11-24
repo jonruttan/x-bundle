@@ -40,9 +40,10 @@ unpacked, and it replaces an earlier install only once it is whole.
 
 Each `(requires-bundle "NAME" "VERSION" "OWNER/REPO")` row of the installed
 bundle's `bundle.xon` is then installed the same way: that release of that
-repository, the latest when the row names no version, `jonruttan/x-NAME` when
-it names no repository. A requirement already installed at the release asked
-for is left alone.
+repository, the latest when the row names no version. A row that names no
+repository takes the one the index lists under its name, and
+`jonruttan/x-NAME` when the index has no such row. A requirement already
+installed at the release asked for is left alone.
 
 Two environment variables move where install looks. `X_BUNDLE_INDEX` names
 another index, as a URL or a `file://` path. `X_BUNDLE_HOST` replaces
