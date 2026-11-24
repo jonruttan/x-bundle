@@ -113,3 +113,44 @@ bundle/install, against releases laid out under a directory.
 ```
 ---
     (#t "bundle: not a bundle's name: ../dep" "bundle: not a bundle's name: " (("dep" . "v3")))
+
+## install from a directory
+
+### the declaration and lib/, no stamp, and what it requires
+
+```bundle
+(def dir (spec-host!))
+(def path (install! (spec-source! "loc") dir))
+(write (list (installed dir)
+             (File exists? (Str8 append path "/lib/loc/m.x"))
+             (File exists? (Str8 append path "/tests"))
+             (File exists? (Str8 append path "/version"))))
+```
+---
+    ((("dep" . "v2") ("loc")) #t #f #f)
+
+### again replaces the earlier install whole
+
+```bundle
+(def dir (spec-host!))
+(def src (spec-source! "loc"))
+(def path (install! src dir))
+(File write-all (Str8 append path "/stale") "stale")
+(File write-all (Str8 append src "/lib/loc/n.x") "(module n)\n")
+(install! src dir)
+(write (list (File exists? (Str8 append path "/stale")) (File exists? (Str8 append path "/lib/loc/n.x"))))
+```
+---
+    (#f #t)
+
+### a directory with no bundle in it
+
+```bundle
+(def dir (spec-host!))
+(spec-mkdirs (Str8 append spec-root "/empty"))
+(write (list (Str8 starts? "bundle: no bundle.xon naming a bundle in /"
+               (spec-raise (fn (_) (install! (Str8 append spec-root "/empty") dir))))
+             (installed dir)))
+```
+---
+    (#t ())

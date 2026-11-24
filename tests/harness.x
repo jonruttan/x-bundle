@@ -76,3 +76,20 @@
 
 ; What raising work says, or "no raise".
 (def spec-raise (fn (_ work) (guard (e (Err text e)) (do (work) "no raise"))))
+
+; A bundle's checkout under this process's directory: a declaration that
+; requires dep v2, one module, and two things a release leaves out, a
+; version stamp and a suite. Answers the directory.
+(def spec-source!
+  (fn (_ name)
+    (let ((src (Str8 append spec-root "/src/" name)))
+      (do
+        (spec-clear! src)
+        (spec-mkdirs (Str8 append src "/lib/" name))
+        (spec-mkdirs (Str8 append src "/tests"))
+        (File write-all (Str8 append src "/bundle.xon")
+          (Str8 append "(name \"" name "\")\n(dialect he)\n(requires-bundle \"dep\" \"v2\" \"alice/x-dep\")\n"))
+        (File write-all (Str8 append src "/lib/" name "/m.x") "(module m)\n")
+        (File write-all (Str8 append src "/tests/t.spec.md") "# t\n")
+        (File write-all (Str8 append src "/version") "v9\n")
+        src))))
