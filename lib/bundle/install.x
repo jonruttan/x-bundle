@@ -190,13 +190,46 @@
       (if (null? row) ()
         (if (pair? (rest row)) (if (str? (first (rest row))) (first (rest row)) ()) ())))))
 
+; The paths the (payload "PATH" ...) rows among forms name, in order: what a
+; bundle ships beside its declaration and lib/. A path is one name at the
+; bundle's top, so nothing outside the bundle can be named, and not one the
+; install writes itself.
+(def %payload
+  (fn (_ forms)
+    (List flat-map
+      (fn (_ f)
+        (List map
+          (fn (_ p)
+            (match
+              ((not (str? p)) (%bad "a payload row names paths as strings"))
+              ((if (str=? p "") #t (if (Str8 includes? "/" p) #t (Str8 starts? "." p)))
+                (%bad (Str8 append "not a path at the bundle's top: payload " p)))
+              ((if (str=? p "bundle.xon") #t (if (str=? p "lib") #t (str=? p "version")))
+                (%bad (Str8 append "payload names " p ", which every install carries or writes")))
+              (#t p)))
+          (rest f)))
+      (List filter (fn (_ f) (if (pair? f) (eq? (first f) (lit payload)) #f)) forms))))
+
+; The payload path name copied from the bundle in from to tmp: a directory
+; whole, a file as it is. One the bundle declares and does not have is
+; refused.
+(def %copy-payload!
+  (fn (_ from tmp name)
+    (let ((kind (guard (_ ()) (File ltype (%join from name)))))
+      (match
+        ((eq? kind (lit dir)) (%copy-tree! (%join from name) (%join tmp name)))
+        ((eq? kind (lit file)) (File copy (%join from name) (%join tmp name)))
+        (#t (%bad (Str8 append "bundle.xon declares payload " name ", and " from " has no such file or directory")))))))
+
 ; The bundle in the directory from, installed to dir/NAME under the name its
-; bundle.xon declares: the declaration and lib/, what a release's tarball
-; carries, with no version stamp, since a directory is no release. The copy
-; is whole before it replaces an earlier install. Answers dir/NAME.
+; bundle.xon declares: the declaration, lib/ and the payload it declares,
+; what a release's tarball carries, with no version stamp, since a directory
+; is no release. The copy is whole before it replaces an earlier install.
+; Answers dir/NAME.
 (def %install-directory!
   (fn (_ from dir)
-    (let ((name (%declared-name (%manifest from))))
+    (let ((name (%declared-name (%manifest from)))
+          (payload (%payload (%manifest from))))
       (match
         ((null? name) (%bad (Str8 append "no bundle.xon naming a bundle in " from)))
         ((if (str=? name "") #t (if (Str8 includes? "/" name) #t (Str8 starts? "." name)))
@@ -211,6 +244,8 @@
               (if (eq? (File ltype (%join from "lib")) (lit dir))
                 (%copy-tree! (%join from "lib") (%join tmp "lib"))
                 ())
+              (guard (e (do (%remove-tree! tmp) (error (Err text e))))
+                (List for-each (fn (_ p) (%copy-payload! from tmp p)) payload))
               (if (File exists? path) (%remove-tree! path) ())
               (File rename tmp path)
               (display "bundle: installed " name " from " from " to " path "\n")
