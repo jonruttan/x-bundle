@@ -143,6 +143,39 @@ bundle/install, against releases laid out under a directory.
 ---
     (#f #t)
 
+### the payload its bundle.xon declares comes too, a directory and a file
+
+```bundle
+(def dir (spec-host!))
+(def src (spec-source! "loc"))
+(spec-mkdirs (Str8 append src "/data/deep"))
+(File write-all (Str8 append src "/data/deep/d.xon") "(d)\n")
+(File write-all (Str8 append src "/NOTICE") "notice\n")
+(File write-all (Str8 append src "/bundle.xon")
+  (Str8 append (File read-all (Str8 append src "/bundle.xon")) "(payload \"data\" \"NOTICE\")\n"))
+(def path (install! src dir))
+(write (list (File read-all (Str8 append path "/data/deep/d.xon"))
+             (File read-all (Str8 append path "/NOTICE"))
+             (File exists? (Str8 append path "/tests"))))
+```
+---
+    ("(d)\n" "notice\n" #f)
+
+### payload the directory lacks, or outside the bundle, installs nothing
+
+```bundle
+(def dir (spec-host!))
+(def src (spec-source! "loc"))
+(def xon (File read-all (Str8 append src "/bundle.xon")))
+(def with (fn (_ row) (do (File write-all (Str8 append src "/bundle.xon") (Str8 append xon row)) src)))
+(write (list (Str8 ends? "has no such file or directory" (spec-raise (fn (_) (install! (with "(payload \"data\")\n") dir))))
+             (spec-raise (fn (_) (install! (with "(payload \"../x\")\n") dir)))
+             (spec-raise (fn (_) (install! (with "(payload \"lib\")\n") dir)))
+             (File list-dir dir)))
+```
+---
+    (#t "bundle: not a path at the bundle's top: payload ../x" "bundle: payload names lib, which every install carries or writes" ())
+
 ### a directory with no bundle in it
 
 ```bundle

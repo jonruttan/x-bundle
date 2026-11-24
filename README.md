@@ -40,10 +40,20 @@ unpacked, and it replaces an earlier install only once it is whole.
   row. Its latest release's pin is read.
 - **A URL** is the pin itself, on any host.
 - **A directory**, what starts with `.` or `/`, holds a bundle: its
-  `bundle.xon` and `lib/` are copied under the name the `bundle.xon`
-  declares, with no version stamp, since a directory is no release. `list`
-  shows such a bundle with no version, and it meets only a requirement that
-  names none.
+  `bundle.xon`, `lib/` and the payload it declares are copied under the name
+  the `bundle.xon` declares, with no version stamp, since a directory is no
+  release. `list` shows such a bundle with no version, and it meets only a
+  requirement that names none.
+
+A bundle that ships more than `lib/` names it in its `bundle.xon`:
+
+```x
+(payload "data" "art")
+```
+
+Each is a file or directory at the bundle's top. One the directory lacks,
+or a path that is not at the top, stops the install before anything is
+replaced.
 
 Each `(requires-bundle "NAME" "VERSION" "OWNER/REPO")` row of the installed
 bundle's `bundle.xon` is then installed the same way: that release of that
