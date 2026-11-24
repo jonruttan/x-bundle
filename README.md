@@ -67,6 +67,11 @@ release that publishes a `bundle.pin.xon`. A bundle needs no row to be
 installed by its reference or its pin's URL: the index is the list of bare
 names, not a gate.
 
+Every change to this repository, and every week, CI installs each row by its
+name with this installer, from the row's latest release
+([`tools/index-install.x`](tools/index-install.x)). A row whose repository
+publishes no pin, or whose release is another bundle's, fails there.
+
 ## Tests
 
 ```sh

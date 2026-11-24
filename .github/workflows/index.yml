@@ -1,0 +1,54 @@
+name: Index
+
+# Every row of index.xon installs: each bundle the index lists is installed
+# by its name, with the installer this repository ships, from the row's
+# latest release.  A row whose repository publishes no bundle.pin.xon, or
+# whose release is another bundle's, fails here and not on a user's machine.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  # Weekly, because a listed bundle can move while this repository sits still.
+  schedule:
+    - cron: '0 7 * * 1'
+
+jobs:
+  install:
+    name: every row installs
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: read
+        name: Read (requires-release ...) from bundle.xon
+        run: |
+          version=$(sed -n 's/^(requires-release "\(.*\)")$/\1/p' bundle.xon)
+          if [ -z "$version" ]; then
+            echo "bundle.xon declares no (requires-release ...)" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check out x-lang
+        uses: actions/checkout@v7
+        with:
+          repository: jonruttan/x-lang
+          ref: ${{ steps.read.outputs.version }}
+          path: .x-lang
+
+      - name: Build the platform
+        working-directory: .x-lang
+        run: |
+          make engine
+          make
+          make boot
+
+      # A checkout's wrapper runs from its own root.  X_BUNDLE_DIR is this
+      # checkout's parent, where the imports find the bundle by its name.
+      - name: Install every row
+        working-directory: .x-lang
+        run: |
+          X_BUNDLE_DIR="$GITHUB_WORKSPACE/.." sh x.sh --no-pin -q \
+            -f "$GITHUB_WORKSPACE/tools/index-install.x"
