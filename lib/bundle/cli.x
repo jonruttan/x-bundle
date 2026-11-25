@@ -9,6 +9,7 @@
 ; @license MIT No Attribution (MIT-0)
 (module bundle/cli)
 
+(import bundle/check check!)
 (import x/sys/opts)
 (import x/sys/posix)
 (import x/type/err)
@@ -19,7 +20,7 @@
 
 (def bundle-options
   (Opts declare "x bundle" "COMMAND [ARG] [OPTIONS]"
-    "Start, install, list and remove x bundles."
+    "Start, check, install, list and remove x bundles."
     (list (Opts text "Commands:")
           (Opts text "  new NAME      Start a bundle in the directory NAME: its bundle.xon, one")
           (Opts text "                module, one spec and a README")
@@ -28,6 +29,8 @@
           (Opts text "                or a directory holding a bundle, such as .")
           (Opts text "  list          List the installed bundles and their versions")
           (Opts text "  remove NAME   Remove an installed bundle")
+          (Opts text "  check         Check the bundle in this directory: its specs, the linter,")
+          (Opts text "                its documentation's examples, one meaning a global name")
           (Opts text "")
           (Opts text "Options:")
           (Opts arg "-d" "--dir" "DIR" "The bundles directory, in place of the one this x reads")
@@ -94,6 +97,11 @@
         (if (= (List length operands) 1)
           (%run (fn (_) (%say 1 (Str8 append "bundle: removed " (remove! (first operands) (dir)) "\n"))))
           (%refuse "remove takes one bundle's name")))
+      ((str=? command "check")
+        (if (null? operands)
+          (guard (e (do (%say 2 (Str8 append (Err text e) "\n")) 1))
+            (if (check! (Sys getcwd)) 0 1))
+          (%refuse "check takes no operands")))
       (#t (%refuse (Str8 append "no such command: " command))))))
 
 (provide bundle/cli bundle-main bundle-options bundle-version)

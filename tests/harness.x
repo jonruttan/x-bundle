@@ -12,6 +12,7 @@
 (import bundle/install bundles-dir install! installed remove!)
 (import bundle/cli bundle-main)
 (import bundle/new new! running-release release-tag)
+(import bundle/check spec-verdict known-failures)
 ;
 ; spec-host! lays the fixture tarballs out as github.com lays out releases,
 ; under a directory of this process, writes an index of them, and points
