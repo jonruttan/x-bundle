@@ -11,6 +11,7 @@
 (import bundle/index index-rows index-read index-ref ref-parts ref-pin-url)
 (import bundle/install bundles-dir install! installed remove!)
 (import bundle/cli bundle-main)
+(import bundle/new new! running-release release-tag)
 ;
 ; spec-host! lays the fixture tarballs out as github.com lays out releases,
 ; under a directory of this process, writes an index of them, and points

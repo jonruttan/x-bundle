@@ -9,6 +9,8 @@ index of official bundles.
 
 ## Commands
 
+    new NAME      Start a bundle in the directory NAME: its bundle.xon, one
+                  module, one spec and a README
     install WHAT  Install a bundle and every bundle it requires. WHAT is a
                   name in the index, OWNER/REPO, the URL of a bundle.pin.xon,
                   or a directory holding a bundle, such as .
@@ -16,10 +18,12 @@ index of official bundles.
     remove NAME   Remove an installed bundle
 
     -d, --dir DIR  The bundles directory, in place of the one this x reads
+        --library  With new: a library, a bundle with no entry
     -V, --version  Print the version and exit
     -h, --help     Print this help and exit
 
 ```sh
+x -l bundle -- new my-app                   # start a bundle in ./my-app
 x -l bundle -- install gfx                  # a name the index lists
 x -l bundle -- install alice/x-foo          # a repository on github.com
 x -l bundle -- install https://example.org/foo/bundle.pin.xon
@@ -27,6 +31,22 @@ x -l bundle -- install .                    # the bundle in this directory
 x -l bundle -- list
 x -l bundle -- remove gfx
 ```
+
+## What new writes
+
+`new NAME` makes the directory `NAME` with the four files a bundle starts
+from:
+
+    NAME/bundle.xon                  its name, (dialect he), the release of this x
+    NAME/lib/NAME/run.x              the entry: a main that prints and exits
+    NAME/tests/specs/NAME.spec.md    one spec, of what the module says
+    NAME/README.md
+
+`--library` starts a library: no `(entry run)`, and the module is
+`lib/NAME/NAME.x`. A name is lower-case letters, digits and hyphens, a letter
+first. The release declared is the one this x was installed as; an x built
+past a release declares that release, and one with no stamp, a checkout,
+leaves the row out and says so.
 
 ## What install does
 
