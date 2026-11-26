@@ -16,6 +16,8 @@ index of official bundles.
                   or a directory holding a bundle, such as .
     list          List the installed bundles and their versions
     remove NAME   Remove an installed bundle
+    check         Check the bundle in this directory: its specs, the linter,
+                  its documentation's examples, one meaning a global name
 
     -d, --dir DIR  The bundles directory, in place of the one this x reads
         --library  With new: a library, a bundle with no entry
@@ -30,6 +32,7 @@ x -l bundle -- install https://example.org/foo/bundle.pin.xon
 x -l bundle -- install .                    # the bundle in this directory
 x -l bundle -- list
 x -l bundle -- remove gfx
+x -l bundle -- check                        # the bundle in this directory
 ```
 
 ## What new writes
@@ -85,6 +88,27 @@ installed at the release asked for is left alone.
 Two environment variables move where install looks. `X_BUNDLE_INDEX` names
 another index, as a URL or a `file://` path. `X_BUNDLE_HOST` replaces
 `https://github.com` under an `OWNER/REPO` reference.
+
+## What check does
+
+`check` holds the bundle in the directory it is run from to what the shared
+CI holds it to, in four steps, each run whatever the one before it said:
+
+- **One meaning a global name:** no two files define the same global
+  differently.
+- **Specs:** every `tests/specs/*.spec.md`, on the platform's spec runner.
+  The tests that fail are held to `tests/contract/known-failures.txt`, one
+  name a line: a failure not in it, and a name in it that passes, both fail
+  the step. A bundle with no such file has none recorded.
+- **Lint:** the platform's linter, on its structural rules.
+- **Documentation examples:** each `(example "IN" "OUT")` in a `(doc ...)`
+  form, run and held to what it says.
+
+The checks are the platform's, under its `tests/` and `tools/bundle-kit`,
+and are run as they are: a bundle carries no copy of them and no script to
+reach them. A bundle with no `tests/harness.x` is given the boot and its
+roots; its specs import what they use. The generated harness is written
+under `tests/lib/`, which a bundle leaves out of its repository.
 
 ## The index
 
