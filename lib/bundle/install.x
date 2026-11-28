@@ -86,7 +86,7 @@
                   (ref-pin-url ref ()))))))))
 
 ; The forms of the bundle.xon in path, or nil where there is none.
-(def %manifest
+(def bundle-manifest
   (fn (_ path)
     (guard (_ ()) (Xon parse (File read-all (%join path "bundle.xon"))))))
 
@@ -146,10 +146,10 @@
                       (if (str=? (Path basename path) name) ()
                         (%bad (Str8 append "required " name ", installed a bundle calling itself "
                                 (Path basename path))))
-                      (self (%requires (%manifest path)) dir (pair name seen)))))))))))))
+                      (self (%requires (bundle-manifest path)) dir (pair name seen)))))))))))))
 
 ; dir and every directory above it that is missing.
-(def %mkdirs!
+(def mkdirs!
   (fn (self dir)
     (if (File exists? dir) ()
       (do (self (Path dirname dir))
@@ -184,7 +184,7 @@
   (fn (_ what) (if (Str8 starts? "." what) #t (Str8 starts? "/" what))))
 
 ; The name the (name "NAME") row among forms declares, or nil.
-(def %declared-name
+(def declared-name
   (fn (_ forms)
     (let ((row (List find (fn (_ f) (if (pair? f) (eq? (first f) (lit name)) #f)) forms)))
       (if (null? row) ()
@@ -194,7 +194,7 @@
 ; bundle ships beside its declaration and lib/. A path is one name at the
 ; bundle's top, so nothing outside the bundle can be named, and not one the
 ; install writes itself.
-(def %payload
+(def payload-paths
   (fn (_ forms)
     (List flat-map
       (fn (_ f)
@@ -228,8 +228,8 @@
 ; Answers dir/NAME.
 (def %install-directory!
   (fn (_ from dir)
-    (let ((name (%declared-name (%manifest from)))
-          (payload (%payload (%manifest from))))
+    (let ((name (declared-name (bundle-manifest from)))
+          (payload (payload-paths (bundle-manifest from))))
       (match
         ((null? name) (%bad (Str8 append "no bundle.xon naming a bundle in " from)))
         ((if (str=? name "") #t (if (Str8 includes? "/" name) #t (Str8 starts? "." name)))
@@ -257,11 +257,11 @@
 (def install!
   (fn (_ what dir)
     (do
-      (%mkdirs! dir)
+      (mkdirs! dir)
       (let ((path (if (%directory? what)
                     (%install-directory! what dir)
                     (Pin install (%pin-url what dir) dir))))
-        (do (%install-requires! (%requires (%manifest path)) dir (list (Path basename path)))
+        (do (%install-requires! (%requires (bundle-manifest path)) dir (list (Path basename path)))
             path)))))
 
 ; The bundles installed directly under dir -> ((NAME . VERSION) ...) sorted
@@ -271,7 +271,7 @@
     (List sort (fn (_ a b) (Str8 <? (first a) (first b)))
       (List flat-map
         (fn (_ e)
-          (if (if (Str8 starts? "." e) #t (null? (%manifest (%join dir e)))) ()
+          (if (if (Str8 starts? "." e) #t (null? (bundle-manifest (%join dir e)))) ()
             (list (pair e (%version (%join dir e))))))
         (guard (_ ()) (File list-dir dir))))))
 
@@ -283,7 +283,7 @@
       (match
         ((if (str=? name "") #t (if (Str8 includes? "/" name) #t (Str8 starts? "." name)))
           (%bad (Str8 append "not a bundle's name: " name)))
-        ((null? (%manifest path)) (%bad (Str8 append name " is not installed in " dir)))
+        ((null? (bundle-manifest path)) (%bad (Str8 append name " is not installed in " dir)))
         (#t (do (%remove-tree! path) path))))))
 
-(provide bundle/install bundles-dir install! installed remove!)
+(provide bundle/install bundles-dir install! installed remove! bundle-manifest declared-name payload-paths mkdirs!)

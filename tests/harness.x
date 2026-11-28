@@ -13,6 +13,7 @@
 (import bundle/cli bundle-main)
 (import bundle/new new! running-release release-tag)
 (import bundle/check spec-verdict known-failures)
+(import bundle/release release!)
 ;
 ; spec-host! lays the fixture tarballs out as github.com lays out releases,
 ; under a directory of this process, writes an index of them, and points
@@ -94,4 +95,16 @@
         (File write-all (Str8 append src "/lib/" name "/m.x") "(module m)\n")
         (File write-all (Str8 append src "/tests/t.spec.md") "# t\n")
         (File write-all (Str8 append src "/version") "v9\n")
+        src))))
+
+; spec-source!'s checkout, ready to release from o/x-loc: the repository row,
+; a README, and a file whose name starts with "." that a release leaves out.
+(def spec-release-source!
+  (fn (_ name)
+    (let ((src (spec-source! name)))
+      (do
+        (File write-all (Str8 append src "/bundle.xon")
+          (Str8 append (File read-all (Str8 append src "/bundle.xon")) "(repository \"o/x-" name "\")\n"))
+        (File write-all (Str8 append src "/README.md") (Str8 append "# " name "\n"))
+        (File write-all (Str8 append src "/lib/" name "/.swap") "swap\n")
         src))))

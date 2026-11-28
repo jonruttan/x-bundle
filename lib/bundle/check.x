@@ -133,21 +133,12 @@
         (do (%say (Str8 append "check: " name (if ok " ok\n" " FAILED\n")))
             ok)))))
 
-; The harness the specs boot from, written by the kit's generator. A bundle
-; with a tests/harness.x has it as the harness's tail; one with none gets
-; the boot and its roots, and the line the generator ends a tail with, which
-; makes what follows the program.
+; The harness the specs boot from, written by the kit's generator: the boot,
+; the bundle's roots, and its tests/harness.x where it has one. Answers #t
+; when it was written.
 (def %harness!
-  (fn (_ dir env kit)
-    (let ((out (%join dir "tests/lib/harness.gen.x"))
-          (tail? (File exists? (%join dir "tests/harness.x"))))
-      (if (not (= 0 (%child (if tail? env (pair (pair "GEN_HARNESS_TAIL" "0") env))
-                            (list "sh" (%join kit "gen-harness.sh")))))
-        #f
-        (do
-          (if tail? ()
-            (File write-all out (Str8 append (File read-all out) "\n(%module-program!)\n")))
-          #t)))))
+  (fn (_ env kit)
+    (= 0 (%child env (list "sh" (%join kit "gen-harness.sh"))))))
 
 ; The specs, through the platform's runner, their output shown as it comes
 ; and kept; then the verdict on it.
@@ -200,7 +191,7 @@
               (let ((names (%step "one meaning a global name"
                              (fn (_) (= 0 (%child env (list "sh" (%join kit "dup-defs.sh")))))))
                     (specs (%step "specs"
-                             (fn (_) (if (%harness! dir env kit) (%specs dir env share engine) #f))))
+                             (fn (_) (if (%harness! env kit) (%specs dir env share engine) #f))))
                     (lint (%step "lint"
                             (fn (_) (= 0 (%child env (list "sh" (%join kit "lint.sh") "--strict"))))))
                     (docs (%step "documentation examples"

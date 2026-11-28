@@ -15,12 +15,13 @@
 (import x/type/err)
 (import bundle/install bundles-dir install! installed remove!)
 (import bundle/new new! running-release)
+(import bundle/release release!)
 
 (def bundle-version "0.1.0")
 
 (def bundle-options
   (Opts declare "x bundle" "COMMAND [ARG] [OPTIONS]"
-    "Start, check, install, list and remove x bundles."
+    "Start, check, release, install, list and remove x bundles."
     (list (Opts text "Commands:")
           (Opts text "  new NAME      Start a bundle in the directory NAME: its bundle.xon, one")
           (Opts text "                module, one spec and a README")
@@ -31,6 +32,9 @@
           (Opts text "  remove NAME   Remove an installed bundle")
           (Opts text "  check         Check the bundle in this directory: its specs, the linter,")
           (Opts text "                its documentation's examples, one meaning a global name")
+          (Opts text "  release TAG   Write the bundle in this directory into dist/ as release TAG:")
+          (Opts text "                its tarball, the tarball's digest, and the bundle.pin.xon")
+          (Opts text "                an install reads")
           (Opts text "")
           (Opts text "Options:")
           (Opts arg "-d" "--dir" "DIR" "The bundles directory, in place of the one this x reads")
@@ -102,6 +106,12 @@
           (guard (e (do (%say 2 (Str8 append (Err text e) "\n")) 1))
             (if (check! (Sys getcwd)) 0 1))
           (%refuse "check takes no operands")))
+      ((str=? command "release")
+        (if (= (List length operands) 1)
+          (%run (fn (_)
+                  (List for-each (fn (_ p) (%say 1 (Str8 append "bundle: wrote " p "\n")))
+                    (release! (Sys getcwd) (first operands) (Str8 append (Sys getcwd) "/dist")))))
+          (%refuse "release takes one tag")))
       (#t (%refuse (Str8 append "no such command: " command))))))
 
 (provide bundle/cli bundle-main bundle-options bundle-version)

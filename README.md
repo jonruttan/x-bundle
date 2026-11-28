@@ -18,6 +18,9 @@ index of official bundles.
     remove NAME   Remove an installed bundle
     check         Check the bundle in this directory: its specs, the linter,
                   its documentation's examples, one meaning a global name
+    release TAG   Write the bundle in this directory into dist/ as release TAG:
+                  its tarball, the tarball's digest, and the bundle.pin.xon
+                  an install reads
 
     -d, --dir DIR  The bundles directory, in place of the one this x reads
         --library  With new: a library, a bundle with no entry
@@ -33,6 +36,7 @@ x -l bundle -- install .                    # the bundle in this directory
 x -l bundle -- list
 x -l bundle -- remove gfx
 x -l bundle -- check                        # the bundle in this directory
+x -l bundle -- release v0.1.0               # dist/x-bundle-v0.1.0.tar.gz and its pin
 ```
 
 ## What new writes
@@ -109,6 +113,25 @@ and are run as they are: a bundle carries no copy of them and no script to
 reach them. A bundle with no `tests/harness.x` is given the boot and its
 roots; its specs import what they use. The generated harness is written
 under `tests/lib/`, which a bundle leaves out of its repository.
+
+## What release writes
+
+`release TAG` writes the bundle in the directory it is run from into
+`dist/` as the three files an install reads, named for its repository:
+
+    dist/REPO-TAG.tar.gz          the bundle
+    dist/REPO-TAG.tar.gz.sha256   its SHA-256, as shasum prints it
+    dist/bundle.pin.xon           its name, the tag, the digest and the
+                                  tarball's URL
+
+The repository is the `(repository "OWNER/REPO")` row of `bundle.xon`, and
+the URL is that repository's GitHub release for the tag. The tarball holds
+`bundle.xon`, `lib/`, the payload, and `LICENSE` and `README.md` where the
+bundle has them, under `REPO-TAG/`, with a file `version` holding the tag.
+It is packed from the directory as it is, and says each path it packs; a
+name starting with `.` is left out. Members carry no time or owner, so the
+same files give the same bytes. Publishing the three files at that release
+is left to the author.
 
 ## The index
 
