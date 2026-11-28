@@ -137,7 +137,13 @@ publishes no pin, or whose release is another bundle's, fails there.
 
 ```sh
 sh tests/spec-runner.sh
+BUNDLE=. sh "$(x --share-dir)/tools/bundle-kit/card.sh"
 ```
 
 The suite installs from fixture releases under `tests/fixtures`, laid out
 under a directory as github.com lays out releases, and reaches no network.
+
+[docs/card.md](docs/card.md) is the card: the commands, the options and what
+`new` writes in tables, with its rows and programs run by the platform's
+card check above.  `tests/card-run.sh` runs a program: shell lines, in a
+directory removed after.
