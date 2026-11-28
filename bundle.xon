@@ -6,6 +6,6 @@
 ; platform's pin tool and, on a first fetch, Http.
 (dialect he)
 
-(requires-release "v0.63.0")
+(requires-release "v0.65.0")
 
 (entry run)
